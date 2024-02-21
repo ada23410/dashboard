@@ -1,5 +1,6 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
+    <Loading :active="isLoading"></Loading>
     <div class="container mt-5">
         <!-- 使用v-on監聽表單事件 -->
         <form class="row justify-content-center" @submit.prevent="signIn">
@@ -43,7 +44,8 @@ export default {
     return {
       user: {
         username: '',
-        password: ''
+        password: '',
+        isLoading: false
       }
     }
   },
@@ -51,12 +53,16 @@ export default {
     signIn () {
     //   console.log('login')
       const api = `${process.env.VUE_APP_API}admin/signin`
-      console.log(api)
+      // console.log(api)
+      this.isLoading = true
       this.$http.post(api, this.user).then((res) => {
-        const { token, expired } = res.data
-        // console.log(token, expired)
-        document.cookie = `hexToken${token}; expires=${new Date(expired)}`
-        console.log(res)
+        this.isLoading = false
+        if (res.data.success) {
+          const { token, expired } = res.data
+          // console.log(token, expired)
+          document.cookie = `Hexuid=hexToken${token}; expires=${new Date(expired).toUTCString()}; path=/`
+          this.$router.push('/dashboard/products')
+        }
       })
     }
   }
