@@ -20,10 +20,10 @@
             <td>{{ item.category }}</td>
             <td>{{ item.title }}</td>
             <td class="text-right">
-                {{ item.origin_price }}
+                {{ $filters.currency(item.origin_price) }}
             </td>
             <td class="text-right">
-                {{ item.price }}
+                {{ $filters.currency(item.price) }}
             </td>
             <td>
                 <span class="text-success" v-if="item.is_enabled">啟用</span>
@@ -39,6 +39,7 @@
         </tbody>
     </table>
     <!-- 把外層tempProduct傳進內層product -->
+    <Pagination :pages="pagination" @emit-pages="getProducts"></Pagination>
     <ProductModal ref="productModal" :product="tempProduct" @update-product="updateProduct"></ProductModal>
     <DelProductConfirm ref="delProductConfirm" :product="tempProduct" @confirm-delete="confirmDelete"></DelProductConfirm>
 </template>
@@ -47,6 +48,7 @@
 // 外層
 import ProductModal from '../components/ProductModal.vue'
 import DelProductConfirm from '../components/DelModal.vue'
+import Pagination from '../components/Pagination.vue'
 
 export default {
   data () {
@@ -61,19 +63,22 @@ export default {
   components: {
     // eslint-disable-next-line no-undef, vue/no-unused-components
     ProductModal,
-    DelProductConfirm
+    DelProductConfirm,
+    Pagination
   },
   inject: ['emitter'],
   methods: {
-    getProducts () {
-      const api = `${process.env.VUE_APP_API}api/${process.env.VUE_APP_PATH}/admin/products`
+    getProducts (page = 1) {
+      const api = `${process.env.VUE_APP_API}api/${process.env.VUE_APP_PATH}/admin/products/?page=${page}`
       this.isLoading = true
       this.$http.get(api).then((res) => {
         this.isLoading = false
-        // console.log(res.data)
+        console.log(res.data)
         if (res.data.success) {
           this.products = res.data.products
           this.pagination = res.data.pagination
+          this.has_next = res.data.has_next
+          this.has_pre = res.data.has_pre
         }
       })
     },
