@@ -12,7 +12,7 @@
             </div>
             <div class="modal-footer">
             <button type="button" class="btn btn-secondary" @click="hideModal">取消</button>
-            <button type="button" class="btn btn-danger" @click="$emit('confirm-delete', product)">删除</button>
+            <button type="button" class="btn btn-danger" @click="$emit('confirm-delete')">删除</button>
             </div>
         </div>
         </div>

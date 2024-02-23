@@ -13,7 +13,7 @@
           </tr>
       </thead>
       <tbody>
-          <tr v-for="item in orders" :key="item.id">
+          <tr v-for="(item, key) in orders" :key="key">
           <td>{{ item.created_at }}</td>
           <td>{{ item.user.email }}</td>
           <td class="text-right">
@@ -48,10 +48,12 @@ import Pagination from '../components/Pagination.vue'
 export default {
   data () {
     return {
-      orders: [],
+      orders: {},
       tempOrder: {},
       pagination: {},
-      isLoading: false
+      isLoading: false,
+      isNew: false,
+      currentPage: 1
     }
   },
   components: {
@@ -62,8 +64,8 @@ export default {
   },
   inject: ['emitter'],
   methods: {
-    getOrders (page = 1) {
-      const api = `${process.env.VUE_APP_API}api/${process.env.VUE_APP_PATH}/admin/orders/?page=${page}`
+    getOrders (currentPage = 1) {
+      const api = `${process.env.VUE_APP_API}api/${process.env.VUE_APP_PATH}/admin/orders/?page=${currentPage}`
       this.isLoading = true
       this.$http.get(api).then((res) => {
         this.isLoading = false
@@ -86,36 +88,31 @@ export default {
       delComponent.showModal()
     },
     updateOrder (item) {
-      this.tempOrder = item
       const orderComponent = this.$refs.orderModal
       this.isLoading = true
       const api = `${process.env.VUE_APP_API}api/${process.env.VUE_APP_PATH}/admin/order/${item.id}`
-      this.$http.put(api, { data: this.tempOrder }).then((res) => {
+      const paid = {
+        is_paid: item.is_paid
+      }
+      this.$http.put(api, { data: paid }).then((res) => {
         this.isLoading = false
         // console.log(res.data)
         orderComponent.hideModal()
         if (res.data.success) {
-          this.getProducts()
-          this.emitter.emit('push-message', {
-            style: 'success',
-            title: '更新成功'
-          })
-        } else {
-          this.emitter.emit('push-message', {
-            style: 'danger',
-            title: '更新失敗',
-            content: res.data.messages.join('、')
-          })
+          this.isLoading = false
+          this.getOrders(this.currentPage)
+          this.$httpMessageState(res, '更新付款狀態')
         }
       })
     },
     confirmDelete () {
       const url = `${process.env.VUE_APP_API}api/${process.env.VUE_APP_PATH}/admin/order/${this.tempOrder.id}`
+      this.isLoading = true
       this.$http.delete(url).then((res) => {
         // console.log(res)
         const delComponent = this.$refs.delOrderConfirm
         delComponent.hideModal()
-        this.getOrders()
+        this.getOrders(this.currentPage)
       })
     //   this.$emit('delete-product', this.item)
     //   this.hideModal()

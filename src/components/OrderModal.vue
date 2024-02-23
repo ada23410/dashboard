@@ -16,24 +16,22 @@
                         <div class="mb-3">
                             <h5>用戶資料</h5>
                             <table class="table">
-                                <thead>
+                                <tbody v-if="tempOrder.user">
                                     <tr>
-                                    <th scope="col">姓名</th>
-                                    <th scope="col">aaa</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                    <th scope="row">Email</th>
-                                    <td>aaa@aaa.aaa</td>
+                                        <th scope="col">姓名</th>
+                                        <th scope="col">{{ tempOrder.user.name }}</th>
                                     </tr>
                                     <tr>
-                                    <th scope="row">電話</th>
-                                    <td>1234-5678</td>
+                                        <th scope="row">Email</th>
+                                        <td>{{ tempOrder.user.email }}</td>
                                     </tr>
                                     <tr>
-                                    <th scope="row">地址</th>
-                                    <td>1234-5678</td>
+                                        <th scope="row">電話</th>
+                                        <td>{{ tempOrder.user.tel }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">地址</th>
+                                        <td>{{ tempOrder.user.address }}</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -43,28 +41,32 @@
                         <div class="mb-3">
                             <h5>訂單細節</h5>
                             <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th scope="col">訂單編號</th>
-                                        <th scope="col">12345678910</th>
-                                    </tr>
-                                </thead>
                                 <tbody>
                                     <tr>
+                                        <th scope="col">訂單編號</th>
+                                        <th scope="col">{{ tempOrder.id }}</th>
+                                    </tr>
+                                    <tr>
                                         <th scope="row">下單時間</th>
-                                        <td>2024/02/23</td>
+                                        <td>{{ $filters.date(tempOrder.create_at) }}</td>
                                     </tr>
                                     <tr>
                                         <th scope="row">付款時間</th>
-                                        <td>2024/02/23</td>
+                                        <td>
+                                            <span v-if="tempOrder.paid_date">{{ $filters.date(tempOrder.paid_date) }}</span>
+                                            <span v-else>時間不正確</span>
+                                        </td>
                                     </tr>
                                     <tr>
                                         <th scope="row">付款狀態</th>
-                                        <td>已付款</td>
+                                        <td>
+                                            <strong v-if="tempOrder.is_paid" class="text-success">已付款</strong>
+                                            <span v-else class="text-muted">尚未付款</span>
+                                        </td>
                                     </tr>
                                     <tr>
                                         <th scope="row">總金額</th>
-                                        <td>13,600</td>
+                                        <td>{{ $filters.currency(tempOrder.total) }}</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -73,22 +75,14 @@
                             <h5>選購商品</h5>
                             <table class="table">
                                 <thead>
-                                    <tr>
-                                        <th scope="col">好看的外套</th>
-                                        <th scope="col">1 / 件</th>
-                                        <th scope="col">950</th>
-                                    </tr>
+                                    <tr></tr>
+                                    <tr></tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <th scope="col">好看的外套</th>
-                                        <th scope="col">1 / 件</th>
-                                        <th scope="col">950</th>
-                                    </tr>
-                                    <tr>
-                                        <th scope="col">好看的外套</th>
-                                        <th scope="col">1 / 件</th>
-                                        <th scope="col">950</th>
+                                    <tr v-for="item in tempOrder.products" :key="item.id">
+                                        <th scope="col">{{ item.product.title }}</th>
+                                        <th scope="col">{{ item.qty }} / {{ item.product.unit }}</th>
+                                        <th scope="col">{{ $filters.currency(item.final_total) }}</th>
                                     </tr>
                                 </tbody>
                             </table>
@@ -99,7 +93,7 @@
                 <button type="button" class="btn btn-outline-secondary"
                         data-bs-dismiss="modal">取消
                 </button>
-                <button type="button" class="btn btn-primary">確認</button>
+                <button type="button" class="btn btn-primary" @click="$emit('update-order', tempOrder)">確認</button>
                 </div>
             </div>
         </div>
@@ -122,14 +116,20 @@ export default ({
     order () {
       // 無法直接修改外層數據，故儲存product到內層的temProduct
       this.tempOrder = this.order
+      this.isPaid = this.tempOrder.is_paid
     }
   },
   data () {
     return {
-      modal: {},
-      tempOrder: {}
+      modal: '',
+      tempOrder: {},
+      status: {},
+      isPaid: false
     }
   },
+  emits: ['update-product'],
+  // eslint-disable-next-line no-undef
+  inject: ['emitter'],
   methods: {
     showModal () {
       this.modal.show()
